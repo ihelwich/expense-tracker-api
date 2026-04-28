@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accounts     Account[]
+  categories   Category[]
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Account {
+  id             Int         @id @default(autoincrement())
+  userId         Int         @map("user_id")
+  name           String
+  type           AccountType
+  startingAmount Float       @map("starting_amount")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("accounts")
+}
+
+model Category {
+  id        Int          @id @default(autoincrement())
+  userId    Int          @map("user_id")
+  name      String
+  type      CategoryType
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  accountId       Int      @map("account_id")
+  categoryId      Int      @map("category_id")
+  amount          Float
+  description     String
+  transactionDate DateTime @map("transaction_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@map("transactions")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  CASH
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}

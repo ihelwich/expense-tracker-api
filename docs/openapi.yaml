@@ -1,0 +1,1133 @@
+openapi: 3.0.3
+
+info:
+  title: Finance Tracker API
+  version: 1.0.0
+  description: API documentation for the Finance Tracker API
+
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account.
+      requestBody:
+        description: User information for account creation.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: Isaiah Helwich
+              email: isaiah@example.com
+              password: password123
+      responses:
+        '201':
+          description: User account successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: 1
+                name: Isaiah Helwich
+                email: isaiah@example.com
+                role: USER
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in user
+      description: Authenticate a user and return a JWT token.
+      requestBody:
+        description: User login credentials.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: alice@test.com
+              password: alice1234
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                token: jwt_token_example
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Get the currently authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: 1
+                name: Alice Johnson
+                email: alice@test.com
+                role: USER
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Get all registered users. Admin access required.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+              example:
+                - id: 1
+                  name: Alice Johnson
+                  email: alice@test.com
+                  role: USER
+                  createdAt: '2026-04-25T18:30:00.000Z'
+                  updatedAt: '2026-04-25T18:30:00.000Z'
+                - id: 2
+                  name: Charlie Admin
+                  email: charlie@demo.com
+                  role: ADMIN
+                  createdAt: '2026-04-25T18:30:00.000Z'
+                  updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Get a specific user. Admins can access any user; regular users can only access their own profile.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: 1
+                name: Alice Johnson
+                email: alice@test.com
+                role: USER
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: Update a user. Admins can update any user; regular users can only update their own profile.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        description: User fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+            example:
+              name: Alice H.
+              email: aliceh@test.com
+      responses:
+        '200':
+          description: User successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: 1
+                name: Alice H.
+                email: aliceh@test.com
+                role: USER
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-26T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      description: Delete a user. Admins can delete any user; regular users can only delete their own profile.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: User successfully deleted. No response body is returned.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Get accounts
+      description: Get accounts. Admins can view all accounts; regular users can view only their own accounts.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+              example:
+                - id: 1
+                  userId: 1
+                  name: Checking Account
+                  type: CHECKING
+                  startingAmount: 500.0
+                  createdAt: '2026-04-25T18:30:00.000Z'
+                  updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        
+    post:
+      tags:
+        - Accounts
+      summary: Create account
+      description: Create a new financial account.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Account data to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequest'
+            example:
+              name: Checking Account
+              type: CHECKING
+              startingAmount: 500.0
+      responses:
+        '201':
+          description: Account successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: 1
+                userId: 1
+                name: Checking Account
+                type: CHECKING
+                startingAmount: 500.0
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: Get account by ID
+      description: Get one account. Admins can access any account; regular users can access only accounts they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: 1
+                userId: 1
+                name: Checking Account
+                type: CHECKING
+                startingAmount: 500.0
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Accounts
+      summary: Update account
+      description: Update an account. Admins can update any account; regular users can update only accounts they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        description: Account fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdateRequest'
+            example:
+              name: Main Checking
+              type: CHECKING
+              startingAmount: 750.0
+      responses:
+        '200':
+          description: Account successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: 1
+                userId: 1
+                name: Main Checking
+                type: CHECKING
+                startingAmount: 750.0
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-26T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Accounts
+      summary: Delete account
+      description: Delete an account. Admins can delete any account; regular users can delete only accounts they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Account successfully deleted. No response body is returned.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Get categories
+      description: Get categories. Admins can view all categories; regular users can view only their own categories.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+              example:
+                - id: 1
+                  userId: 1
+                  name: Groceries
+                  type: EXPENSE
+                  createdAt: '2026-04-25T18:30:00.000Z'
+                  updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Categories
+      summary: Create category
+      description: Create a new transaction category.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Category data to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+            example:
+              name: Groceries
+              type: EXPENSE
+      responses:
+        '201':
+          description: Category successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+              example:
+                id: 1
+                userId: 1
+                name: Groceries
+                type: EXPENSE
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /categories/{id}:
+    get:
+      tags:
+        - Categories
+      summary: Get category by ID
+      description: Get one category. Admins can access any category; regular users can access only categories they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Category found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+              example:
+                id: 1
+                userId: 1
+                name: Groceries
+                type: EXPENSE
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Categories
+      summary: Update category
+      description: Update a category. Admins can update any category; regular users can update only categories they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        description: Category fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdateRequest'
+            example:
+              name: Food
+              type: EXPENSE
+      responses:
+        '200':
+          description: Category successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+              example:
+                id: 1
+                userId: 1
+                name: Food
+                type: EXPENSE
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-26T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    delete:
+      tags:
+        - Categories
+      summary: Delete category
+      description: Delete a category. Admins can delete any category; regular users can delete only categories they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Category successfully deleted. No response body is returned.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get transactions
+      description: Get transactions. Admins can view all transactions; regular users can view only their own transactions.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+              example:
+                - id: 1
+                  userId: 1
+                  accountId: 1
+                  categoryId: 1
+                  amount: 45.2
+                  description: Groceries
+                  transactionDate: '2026-04-25'
+                  createdAt: '2026-04-25T18:30:00.000Z'
+                  updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Transactions
+      summary: Create transaction
+      description: Create a new transaction connected to an account and category.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Transaction data to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateRequest'
+            example:
+              accountId: 1
+              categoryId: 1
+              amount: 45.2
+              description: Groceries
+              transactionDate: '2026-04-25'
+      responses:
+        '201':
+          description: Transaction successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+              example:
+                id: 1
+                userId: 1
+                accountId: 1
+                categoryId: 1
+                amount: 45.2
+                description: Groceries
+                transactionDate: '2026-04-25'
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /transactions/{id}:
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction by ID
+      description: Get one transaction. Admins can access any transaction; regular users can access only transactions they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Transaction found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+              example:
+                id: 1
+                userId: 1
+                accountId: 1
+                categoryId: 1
+                amount: 45.2
+                description: Groceries
+                transactionDate: '2026-04-25'
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-25T18:30:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Transactions
+      summary: Update transaction
+      description: Update a transaction. Admins can update any transaction; regular users can update only transactions they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        description: Transaction fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateRequest'
+            example:
+              accountId: 1
+              categoryId: 1
+              amount: 52.75
+              description: Groceries updated
+              transactionDate: '2026-04-25'
+      responses:
+        '200':
+          description: Transaction successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+              example:
+                id: 1
+                userId: 1
+                accountId: 1
+                categoryId: 1
+                amount: 52.75
+                description: Groceries updated
+                transactionDate: '2026-04-25'
+                createdAt: '2026-04-25T18:30:00.000Z'
+                updatedAt: '2026-04-26T18:30:00.000Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Transactions
+      summary: Delete transaction
+      description: Delete a transaction. Admins can delete any transaction; regular users can delete only transactions they own.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Transaction successfully deleted. No response body is returned.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Resource ID
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          example: Isaiah Helwich
+        email:
+          type: string
+          format: email
+          example: isaiah@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: alice@test.com
+        password:
+          type: string
+          format: password
+          example: alice1234
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: jwt_token_example
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: Alice Johnson
+        email:
+          type: string
+          format: email
+          example: alice@test.com
+        role:
+          type: string
+          enum:
+            - USER
+            - ADMIN
+          example: USER
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Alice H.
+        email:
+          type: string
+          format: email
+          example: aliceh@test.com
+        password:
+          type: string
+          format: password
+          example: newpassword123
+        role:
+          type: string
+          enum:
+            - USER
+            - ADMIN
+          example: USER
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        userId:
+          type: integer
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: Checking Account
+        type:
+          type: string
+          enum:
+            - CHECKING
+            - SAVINGS
+            - CREDIT_CARD
+            - CASH
+          example: CHECKING
+        startingAmount:
+          type: number
+          format: float
+          example: 500.0
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+
+    AccountCreateRequest:
+      type: object
+      required:
+        - name
+        - type
+        - startingAmount
+      properties:
+        name:
+          type: string
+          example: Checking Account
+        type:
+          type: string
+          enum:
+            - CHECKING
+            - SAVINGS
+            - CREDIT_CARD
+            - CASH
+          example: CHECKING
+        startingAmount:
+          type: number
+          format: float
+          example: 500.0
+
+    AccountUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Main Checking
+        type:
+          type: string
+          enum:
+            - CHECKING
+            - SAVINGS
+            - CREDIT_CARD
+            - CASH
+          example: CHECKING
+        startingAmount:
+          type: number
+          format: float
+          example: 750.0
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        userId:
+          type: integer
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: Groceries
+        type:
+          type: string
+          enum:
+            - INCOME
+            - EXPENSE
+          example: EXPENSE
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+
+    CategoryCreateRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          example: Groceries
+        type:
+          type: string
+          enum:
+            - INCOME
+            - EXPENSE
+          example: EXPENSE
+
+    CategoryUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Food
+        type:
+          type: string
+          enum:
+            - INCOME
+            - EXPENSE
+          example: EXPENSE
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        userId:
+          type: integer
+          readOnly: true
+          example: 1
+        accountId:
+          type: integer
+          example: 1
+        categoryId:
+          type: integer
+          example: 1
+        amount:
+          type: number
+          format: float
+          example: 45.2
+        description:
+          type: string
+          example: Groceries
+        transactionDate:
+          type: string
+          format: date
+          example: '2026-04-25'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2026-04-25T18:30:00.000Z'
+
+    TransactionCreateRequest:
+      type: object
+      required:
+        - accountId
+        - categoryId
+        - amount
+        - description
+        - transactionDate
+      properties:
+        accountId:
+          type: integer
+          example: 1
+        categoryId:
+          type: integer
+          example: 1
+        amount:
+          type: number
+          format: float
+          example: 45.2
+        description:
+          type: string
+          example: Groceries
+        transactionDate:
+          type: string
+          format: date
+          example: '2026-04-25'
+
+    TransactionUpdateRequest:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          example: 1
+        categoryId:
+          type: integer
+          example: 1
+        amount:
+          type: number
+          format: float
+          example: 52.75
+        description:
+          type: string
+          example: Groceries updated
+        transactionDate:
+          type: string
+          format: date
+          example: '2026-04-25'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error message
+
+    ValidationError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+          example:
+            - Request is missing required fields or contains invalid data
+
+  responses:
+    BadRequest:
+      description: Request is missing required fields or contains invalid data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            errors:
+              - Request is missing required fields or contains invalid data
+
+    Unauthorized:
+      description: Authentication token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Authentication token is missing or invalid
+
+    Forbidden:
+      description: User is not authorized to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: User is not authorized to access this resource
+
+    NotFound:
+      description: Requested resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Requested resource does not exist
+
+    Conflict:
+      description: Request conflicts with existing data or constraints
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Request conflicts with existing data or constraints
