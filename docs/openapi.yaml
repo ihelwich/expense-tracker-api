@@ -7,7 +7,7 @@ info:
 
 servers:
   - url: http://localhost:8080/api
-  - url: https://expense-tracker-api-vn45.onrender.com
+  - url: https://expense-tracker-api-vn45.onrender.com/api
 
 paths:
   /auth/signup:
